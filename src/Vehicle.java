@@ -21,8 +21,8 @@ class Vehicle{
               String defaultUser=res.getString("defaultUser");
               if(defaultUser.equals("admin")){
                  System.out.println("Admin");
-                /*Admin ad=new Admin();
-                ad.print();*/
+                Admin ad=new Admin();
+                ad.print();
               }
               else if(defaultUser.equals("user")){
                 System.out.println("User");
