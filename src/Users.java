@@ -136,6 +136,62 @@ public class Users{
             System.out.println("Vehicle not found in the cart or user not found: " + email);
         }
     }
+    public String fetchRentPrice(String vehicle_number)throws Exception{
+        String price="";
+        Statement st=con.createStatement();
+        String query = "SELECT * FROM vehicle_details WHERE vehicle_number = '" + vehicle_number +"'";
+        ResultSet resultSet = st.executeQuery(query);
+        while (resultSet.next()) {
+            price= resultSet.getString("rent_price");
+        }
+        return price;
+    }
+    public String returnDate(String email,String vehicle_number)throws Exception{
+        String date="";
+        Statement st=con.createStatement();
+        String query="SELECT * FROM orders_details WHERE email='"+email+"' AND vehicle_number='"+vehicle_number+"'";
+        ResultSet res=st.executeQuery(query);
+        while(res.next()){
+            date=res.getString("return_date");
+        }
+        return date;
+    }
+    public void setVehicleServiceStatus(String vehicle_number,String status)throws Exception{
+        Statement st=con.createStatement();
+        String query="UPDATE vehicle_details SET service='"+status+"' WHERE vehicle_number='"+vehicle_number+"'";
+        int updated = st.executeUpdate(query);
+        if(updated==1){
+            System.out.println("Serice status successfully.");
+        }
+    }
+    public void setVehicleQuality(String vehicle_number,String quality,double price,String run)throws Exception{
+        Statement st=con.createStatement();
+        String query="UPDATE vehicle_details SET condition='"+quality+"' WHERE vehicle_number='"+vehicle_number+"'";
+        String query1="UPDATE vehicle_details SET rent_price='"+price+"' WHERE vehicle_number='"+vehicle_number+"'";
+        String query2="UPDATE vehicle_details SET kilometer='"+run+"' WHERE vehicle_number='"+vehicle_number+"'";
+        int updated = st.executeUpdate(query);
+        int updated1 = st.executeUpdate(query1);
+        int updated2=st.executeUpdate(query2);
+        if(updated==1 && updated1==1 && updated2==1){
+            System.out.println("Vehicle Quality, Rent Price and kilometer run updated successfully.");
+        }
+    }
+    public void updateRentPrice(String email,String vehicle_number,String price)throws Exception{
+        Statement st=con.createStatement();
+        String query="UPDATE payment SET total_amount ='"+price+"' WHERE vehicle_number ='"+vehicle_number+"' AND user_email ='"+email+"'";
+        int update=st.executeUpdate(query);
+        if(update==1){
+            System.out.println("Vehicle Rent Price updated successfully");
+        }
+    }
+    public void viewHistory(String email)throws Exception{
+        Statement st=con.createStatement();
+        String query="SELECT * FROM orders_details WHERE email='"+email+"'";
+        ResultSet res=st.executeQuery(query);
+        while(res.next()){
+            System.out.println(res.getString(2)+" "+res.getString(3)+" "+res.getString(7)+" "+res.getString(8)+" "+res.getString(9)+" "+res.getString(10));
+        }
+    }
     public void print(String username,String user_email,String mobile) throws Exception{
         Scanner s=new Scanner(System.in);
         Admin ad=new Admin();
@@ -216,6 +272,52 @@ public class Users{
                             break;
                     }
                     break;
+            case 6:
+            System.out.println("Enter vehicle number:");
+                    String v_number = s.nextLine();
+                    System.out.println("Enter vehicle type:");
+                    String typeVehicle = s.nextLine();
+                    System.out.println("Enter return date:");
+                    String date =s.nextLine();
+                    System.out.println("Enter vehicle quality (LOW, MEDIUM, HIGH):");
+                    String quality = s.nextLine();
+                    System.out.println("Enter vehicle kilometer run:");
+                    int run = Integer.parseInt(s.nextLine());
+                    double price = Double.parseDouble(fetchRentPrice(v_number));
+                    String return_date = returnDate(user_email, v_number);
+                    if (!date.equals(return_date)) {
+                        price += 0.20 * price;
+                    }
+                    if (run >= 500) {
+                        price += 0.15 * price;
+                    } else if (run >= 1500 && typeVehicle.equals("bike")) {
+                        setVehicleServiceStatus(v_number, "YES");
+                    } else if (run >= 3000 && typeVehicle.equals("car")) {
+                        setVehicleServiceStatus(v_number, "YES");
+                    }
+                    switch (quality) {
+                        case "LOW":
+                            double change=price-0.20 * price;
+                            price += 0.20 * price;
+                            setVehicleQuality(v_number,"LOW",change,String.valueOf(run));
+                            break;
+                        case "MEDIUM":
+                            double change1=price-0.50 * price;
+                            price += 0.50 * price;
+                            setVehicleQuality(v_number,"MEDIUM",change1,String.valueOf(run));
+                            break;
+                        case "HIGH":
+                            double change2=price-0.75 * price;
+                            price += 0.75 * price;
+                            setVehicleQuality(v_number,"HIGH",change2,String.valueOf(run));
+                            break;
+                    }
+                    updateRentPrice(user_email, v_number, String.valueOf(price));
+                    updateVehicleRented("NO",v_number);
+                    break;
+                case 7:
+                viewHistory(user_email);
+                break;
 
           };
         }while(ch!=8);
