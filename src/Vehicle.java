@@ -26,10 +26,10 @@ class Vehicle{
               }
               else if(defaultUser.equals("user")){
                 System.out.println("User");
-                /*users user=new users();
+                Users user=new Users();
                 String username=res.getString("username");
                 String mobile=res.getString("mobile");
-                user.print(username,user_email,mobile);*/
+                user.print(username,user_email,mobile);
               }
               else{
                 System.out.print("Invalid defaultUser");
