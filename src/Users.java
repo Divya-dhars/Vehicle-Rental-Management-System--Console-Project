@@ -86,6 +86,56 @@ public class Users{
             System.out.println("User not found or no fines to pay for user: " + email);
         }
     }
+    public boolean canExtendRent(String email) throws SQLException {
+        Statement st=con.createStatement();
+        ResultSet resultSet=st.executeQuery("SELECT rent_count FROM orders_details WHERE email = '" +email+ "'");
+        if (resultSet.next()) {
+            int rentCount = resultSet.getInt("rent_count");
+            return rentCount <= 2;
+        }
+        return false;
+    }
+    public void extendRent(String email, int numberOfDays) throws Exception {
+        try {
+            Statement s=con.createStatement();
+            String updateQuery="UPDATE orders SET return_date = DATE_ADD(return_date, INTERVAL " + numberOfDays + " DAY), rent_count = rent_count + 1 WHERE email = '" + email + "'";
+            int updated=s.executeUpdate(updateQuery);
+            if(updated==1){
+                System.out.println("Rent extended successfully.");
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+    }
+    public void viewCart(String email)throws Exception{
+        Statement st=con.createStatement();
+        String query = "SELECT * FROM cart WHERE email = '" + email + "'";
+        ResultSet res = st.executeQuery(query);
+        while (res.next()){
+            System.out.println(res.getString(3)+" "+res.getString(4)+" "+res.getString(5)+" "+res.getString(6));
+        }
+    }
+    public void removeAllVehicle(String email)throws Exception{
+        Statement st=con.createStatement();
+        String query="DELETE FROM cart WHERE email='"+email+"'";
+        int deleted=st.executeUpdate(query);
+        if(deleted==1){
+            System.out.println("deleted");
+        }
+        else{
+            System.out.println("Error in deleting");
+        }
+    }
+    public void removeVehicle(String number,String email)throws Exception{
+        Statement st=con.createStatement();
+        String query="DELETE FROM cart WHERE email = '" + email + "' AND vehicle_number = '" + number + "'";
+        int rowsAffected = st.executeUpdate(query);
+        if (rowsAffected > 0) {
+            System.out.println("Vehicle removed successfully from the cart for user: " + email);
+        } else {
+            System.out.println("Vehicle not found in the cart or user not found: " + email);
+        }
+    }
     public void print(String username,String user_email,String mobile) throws Exception{
         Scanner s=new Scanner(System.in);
         Admin ad=new Admin();
@@ -129,6 +179,44 @@ public class Users{
             String val=s.nextLine();
             payFines(user_email,val,fines);
             break;
+            case 4:
+            System.out.println("Do you need to extend your rent for an extra day?");
+                    System.out.println("1. Yes, extend rent || 2. Cancel extension");
+                    int n=s.nextInt();
+                    switch (n) {
+                        case 1:
+                            if (canExtendRent(user_email)) {
+                                extendRent(user_email, 1);
+                            } else {
+                                System.out.println("Sorry, the vehicle cannot be rented for more than 2 days consecutively.");
+                            }
+                            break;
+                        case 2:
+                            break;
+                        default:
+                            System.out.println("Invalid options");
+                            break;
+                    }
+                    break;   
+            case 5:
+            viewCart(user_email);
+                    System.out.println("1.Remove all from cart || 2.Enter a vehicle number to remove");
+                    int number=s.nextInt();
+                    switch(number){
+                        case 1:
+                            removeAllVehicle(user_email); 
+                            break;
+                        case 2:
+                            System.out.println("Enter vehicle number:");
+                            String num=s.nextLine();
+                            removeVehicle(num,user_email);
+                            break;
+                        default:
+                            System.out.println("Invalid options");
+                            break;
+                    }
+                    break;
+
           };
         }while(ch!=8);
     }
